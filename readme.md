@@ -31,4 +31,4 @@ A Pre release rom will be released when text and image saving and loading is com
 
 ## Credits
 
-- [@calc84maniac](https://github.com/calc84maniac) - Bank swapping optimizations.
+- [@calc84maniac](https://github.com/calc84maniac) - Bank swapping optimizations, ramdisk optimizations, overall code help.

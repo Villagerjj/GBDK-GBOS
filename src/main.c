@@ -13,7 +13,7 @@ extern uint16_t IDCords[360];
 extern uint8_t RAMDISK[360];
 
 uint8_t IconCords[360];
-
+uint8_t ProgMode;
 //extern uint32_t DISKSPACE;
 uint_fast8_t curx, cury;
 
@@ -46,7 +46,7 @@ uint8_t get_cluster_data(uint8_t bank, uint16_t offset)
 return DISKP0[(bank * 360 + offset)];
 }
 
-void CPRamDisk2Bank(uint8_t bank)
+void CPRamDisk2BankOLD(uint8_t bank)
 {
   for (uint16_t i = 0; i < 360; i++)
   {
@@ -54,6 +54,25 @@ void CPRamDisk2Bank(uint8_t bank)
     set_banked_data(bank, i, RAMDISK[i]);
   }
 
+}
+
+void CPRamDisk2Bank(uint8_t bank)
+{
+  uint16_t index = bank * (360 / 2);
+  uint8_t sramBank = index / 4096;
+  SWITCH_RAM(sramBank);
+  index = (index % 4096) * 2;
+  uint16_t remaining = 8192 - index;
+  if (remaining >= 360)
+  {
+    memcpy(DISKP0 + index, RAMDISK, 360);
+  }
+  else
+  {
+    memcpy(DISKP0 + index, RAMDISK, remaining);
+    SWITCH_RAM(sramBank + 1);
+    memcpy(DISKP0, RAMDISK + remaining, 360 - remaining);
+  }
 }
 
 void genIconsfromIDs()
@@ -122,8 +141,93 @@ void firstBoot()
   // set_bkg_tile_xy(5, 1, 102); // trash can
 }
 
+void controls(uint8_t cur)
+{
+  switch (ProgMode)
+  {
+  case 0:
+    if (cur & J_A)
+    {
+      SWITCH_RAM(SYSTEMVARS);
+      uint8_t temp = IDCords[(cury * 20 + curx)];
+      if (temp != 0)
+      {
+        if(temp == NOTES)
+        {
+        initNotepad();
+        
+        }
+        else
+        {
+          set_sprite_tile(0, 3);
+        }
+        
+        
+      }
+      else
+      {
+        set_sprite_tile(0, 1);
+      }
+    }
+
+    if (cur & J_B)
+    {
+    }
+
+    if (cur & J_SELECT)
+    {
+    }
+
+    if (cur & J_START)
+    {
+    }
+
+    if (cur & J_UP)
+    {
+      cury -= 1;
+      scroll_sprite(0, 0, -8);
+    }
+    else if (cur & J_DOWN)
+    {
+      cury += 1;
+      scroll_sprite(0, 0, 8);
+    }
+
+    if (cur & J_LEFT)
+    {
+      curx -= 1;
+      scroll_sprite(0, -8, 0);
+    }
+    else if (cur & J_RIGHT)
+    {
+      curx += 1;
+      scroll_sprite(0, 8, 0);
+    }
+    break;
+  
+  default:
+    break;
+  }
+}
+
+void initNotepad()
+{
+  ProgMode = 1;
+  for (uint8_t iy=0; iy < 19; iy++)
+  { 
+    for(uint8_t ix=0; ix < 18; ix++)
+    {
+     
+      set_bkg_tile_xy(ix, iy, 0);
+    }
+  }
+
+  set_bkg_tile_xy(1, 20, 99);
+  set_bkg_tile_xy(1, 20, 99);
+}
 void initDesktop()
 {
+  ProgMode = 0;
   SWITCH_RAM(SYSTEMVARS);
   
 /*
@@ -133,9 +237,9 @@ void initDesktop()
   set_bkg_tile_xy(1, 7, 76);  // notepad
   set_bkg_tile_xy(1, 9, 78);  // transfer */
   genIconsfromIDs();
-for (uint8_t iy=0; iy < 18; iy++)
+for (uint8_t iy=0; iy < 20; iy++)
   { 
-    for(uint8_t ix=0; ix < 20; ix++)
+    for(uint8_t ix=0; ix < 18; ix++)
     {
      
       set_bkg_tile_xy(ix, iy, IconCords[(iy * 20 + ix)]);
@@ -213,53 +317,7 @@ POST:
   SHOW_SPRITES;
   while (1)
   {
-    uint8_t cur = joypad();
-    if (cur & J_A)
-    {
-      SWITCH_RAM(SYSTEMVARS);
-      if (IDCords[(cury * 20 + curx)] != 0)
-      {
-        set_sprite_tile(0, 3);
-      }
-      else
-      {
-        set_sprite_tile(0, 1);
-      }
-    }
-
-    if (cur & J_B)
-    {
-    }
-
-    if (cur & J_SELECT)
-    {
-    }
-
-    if (cur & J_START)
-    {
-    }
-
-    if (cur & J_UP)
-    {
-      cury -= 1;
-      scroll_sprite(0, 0, -8);
-    }
-    else if (cur & J_DOWN)
-    {
-      cury += 1;
-      scroll_sprite(0, 0, 8);
-    }
-
-    if (cur & J_LEFT)
-    {
-      curx -= 1;
-      scroll_sprite(0, -8, 0);
-    }
-    else if (cur & J_RIGHT)
-    {
-      curx += 1;
-      scroll_sprite(0, 8, 0);
-    }
+    controls(joypad());
     delay(100);
   }
 }

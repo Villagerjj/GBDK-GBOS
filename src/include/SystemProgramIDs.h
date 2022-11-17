@@ -7,3 +7,11 @@
 #define PAINT = 3
 #define NOTES = 4
 #define TRANSFER = 5
+
+//Program modes:
+
+// 0 = desktop
+// 1 = notepad
+// 2 = image drawing
+// 3 = transfer
+// 4 = my gb
