@@ -8,10 +8,11 @@
 #define SYSTEMVARS 13
 
 extern uint_fast8_t DISKP0[8192];
-extern BOOLEAN ChkDsk;
-extern uint16_t iconCords[360];
+extern uint8_t ChkDsk;
+extern uint8_t iconCords[360];
+extern uint8_t ProIDCords[360];
 extern uint8_t RAMDISK[360];
-extern uint32_t DISKSPACE;
+//extern uint32_t DISKSPACE;
 uint_fast8_t curx, cury;
 
 void set_banked_data(uint8_t bank, uint16_t offset, uint8_t data)
@@ -44,12 +45,31 @@ void firstBoot()
   {
     for (uint16_t d = 0; d < 360; d++)
     {
-      RAMDISK[d] = 1;
-      DISKSPACE++;
+      RAMDISK[d] = 0;
+      //DISKSPACE++;
     }
     CPRamDisk2Bank(i);
   }
 
+  /*
+  set_bkg_tile_xy(1, 1, 102); // trash can
+  set_bkg_tile_xy(1, 3, 77);  // My gameboy
+  set_bkg_tile_xy(1, 5, 75);  // paint
+  set_bkg_tile_xy(1, 7, 76);  // notepad
+  set_bkg_tile_xy(1, 9, 78);  // transfer*/
+
+  iconCords[(1 * 20 + 1)] = 2;
+  iconCords[(3 * 20 + 1)] = 1;
+  iconCords[(5 * 20 + 1)] = 3;
+  iconCords[(7 * 20 + 1)] = 4;
+  iconCords[(9 * 20 + 1)] = 5;
+
+  ProIDCords[(1 * 20 + 1)] = 2; // trash can
+  ProIDCords[(3 * 20 + 1)] = 1; // My gameboy
+  ProIDCords[(5 * 20 + 1)] = 3; // paint
+  ProIDCords[(7 * 20 + 1)] = 4; // notepad
+  ProIDCords[(9 * 20 + 1)] = 5; // transfer
+  // set_bkg_tile_xy(5, 1, 102); // trash can
   // set_bkg_tile_xy(5, 1, 102); // trash can
 }
 
@@ -60,24 +80,22 @@ void initDesktop()
     set_bkg_tile_xy(i, 8, 0); // clearing nintendo logo
     set_bkg_tile_xy(i, 9, 0); // clearing nintendo logo
   }
-
-  set_bkg_tile_xy(1, 1, 102); // trash can
-  set_bkg_tile_xy(1, 3, 77);  // My gameboy
-  set_bkg_tile_xy(1, 5, 75);  // paint
-  set_bkg_tile_xy(1, 7, 76);  // notepad
-  set_bkg_tile_xy(1, 9, 78);  // transfer
-
-  iconCords[(1 * 20 + 1)] = 2;
-  iconCords[(3 * 20 + 1)] = 1;
-  iconCords[(5 * 20 + 1)] = 3;
-  iconCords[(7 * 20 + 1)] = 4;
-  iconCords[(9 * 20 + 1)] = 5;
+  
+  for (uint8_t iy=0; iy < 18; iy++)
+  { 
+    for(uint8_t ix=0; ix < 20; ix++)
+    {
+      set_bkg_tile_xy(ix, iy, iconCords[(iy * 20 + ix)]);
+    }
+  }
+  
 }
 
 void main(void)
 {
   SHOW_BKG;
   DISPLAY_ON;
+  ENABLE_RAM_MBC5;
   SWITCH_RAM(SYSTEMVARS);
   set_bkg_data(0, 103, graphics);
 
@@ -95,15 +113,15 @@ void main(void)
   set_bkg_tile_xy(15, 8, 29);
   set_bkg_tile_xy(16, 8, 21);
   set_bkg_tile_xy(17, 8, 0);
-  for (int i = 4; i < 17; i++)
+  for (uint8_t i = 4; i < 17; i++)
   {
 
     set_bkg_tile_xy(i, 9, 0); // clearing nintendo logo
   }
-
+  SWITCH_RAM(SYSTEMVARS);
   if (ChkDsk != 69)
   {
-
+    SWITCH_RAM(SYSTEMVARS);
     firstBoot();
     ChkDsk = 69;
   }
@@ -122,7 +140,7 @@ void main(void)
     uint8_t cur = joypad();
     if (cur & J_A)
     {
-      if (iconCords[(cury * 20 + curx)] == 3)
+      if (iconCords[(cury * 20 + curx)] != 0)
       {
         set_sprite_tile(0, 3);
       }
