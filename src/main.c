@@ -9,9 +9,11 @@
 
 extern uint_fast8_t DISKP0[8192];
 extern uint8_t ChkDsk;
-extern uint8_t iconCords[360];
-extern uint8_t ProIDCords[360];
+extern uint16_t IDCords[360];
 extern uint8_t RAMDISK[360];
+
+uint8_t IconCords[360];
+
 //extern uint32_t DISKSPACE;
 uint_fast8_t curx, cury;
 
@@ -23,72 +25,114 @@ void set_banked_data(uint8_t bank, uint16_t offset, uint8_t data)
   DISKP0[index] = data;
 }
 
-uint8_t get_banked_data(uint8_t bank, uint16_t offset)
+void get_banked_data(uint8_t bank, uint16_t offset, uint8_t data)
 {
   uint16_t index = (bank * (360 / 2)) + (offset / 2);
   SWITCH_RAM(index / 4096);
   index = ((index % 4096) * 2) + (offset % 2);
-  return DISKP0[index];
+  DISKP0[index] = data;
+}
+
+void set_cluster_data(uint8_t bank, uint16_t offset, uint8_t data)
+{
+
+  SWITCH_RAM((bank * 360 + offset) / 16);
+  DISKP0[(bank * 360 + offset)] = data;
+}
+
+
+uint8_t get_cluster_data(uint8_t bank, uint16_t offset)
+{
+return DISKP0[(bank * 360 + offset)];
 }
 
 void CPRamDisk2Bank(uint8_t bank)
 {
   for (uint16_t i = 0; i < 360; i++)
   {
+    SWITCH_RAM(SYSTEMVARS);
     set_banked_data(bank, i, RAMDISK[i]);
   }
+
 }
 
 void firstBoot()
 {
+  SWITCH_RAM(SYSTEMVARS);
+  for (uint16_t d = 0; d < 360; d++)
+    {
+
+      RAMDISK[d] = 0;
+     // DISKSPACE++;
+    }
   for (uint8_t i = 0; i < 250; i++)
   {
-    for (uint16_t d = 0; d < 360; d++)
-    {
-      RAMDISK[d] = 0;
-      //DISKSPACE++;
-    }
+    
     CPRamDisk2Bank(i);
   }
-
-  /*
-  set_bkg_tile_xy(1, 1, 102); // trash can
-  set_bkg_tile_xy(1, 3, 77);  // My gameboy
-  set_bkg_tile_xy(1, 5, 75);  // paint
-  set_bkg_tile_xy(1, 7, 76);  // notepad
-  set_bkg_tile_xy(1, 9, 78);  // transfer*/
-
-  iconCords[(1 * 20 + 1)] = 2;
-  iconCords[(3 * 20 + 1)] = 1;
-  iconCords[(5 * 20 + 1)] = 3;
-  iconCords[(7 * 20 + 1)] = 4;
-  iconCords[(9 * 20 + 1)] = 5;
-
-  ProIDCords[(1 * 20 + 1)] = 2; // trash can
-  ProIDCords[(3 * 20 + 1)] = 1; // My gameboy
-  ProIDCords[(5 * 20 + 1)] = 3; // paint
-  ProIDCords[(7 * 20 + 1)] = 4; // notepad
-  ProIDCords[(9 * 20 + 1)] = 5; // transfer
-  // set_bkg_tile_xy(5, 1, 102); // trash can
+  SWITCH_RAM(SYSTEMVARS);
+  for (uint16_t d = 0; d < 360; d++)
+    {
+      IDCords[d] = 0;
+     // DISKSPACE++;
+    }
+  IDCords[(1 * 20 + 1)] = 2;
+  IDCords[(3 * 20 + 1)] = 1;
+  IDCords[(5 * 20 + 1)] = 3;
+  IDCords[(7 * 20 + 1)] = 4;
+  IDCords[(9 * 20 + 1)] = 5;
   // set_bkg_tile_xy(5, 1, 102); // trash can
 }
 
 void initDesktop()
 {
-  for (int i = 4; i < 17; i++)
-  {
-    set_bkg_tile_xy(i, 8, 0); // clearing nintendo logo
-    set_bkg_tile_xy(i, 9, 0); // clearing nintendo logo
-  }
+  SWITCH_RAM(SYSTEMVARS);
   
-  for (uint8_t iy=0; iy < 18; iy++)
+/*
+  set_bkg_tile_xy(1, 1, 102); // trash can
+  set_bkg_tile_xy(1, 3, 77);  // My gameboy
+  set_bkg_tile_xy(1, 5, 75);  // paint
+  set_bkg_tile_xy(1, 7, 76);  // notepad
+  set_bkg_tile_xy(1, 9, 78);  // transfer */
+for (uint8_t iy=0; iy < 18; iy++)
   { 
     for(uint8_t ix=0; ix < 20; ix++)
     {
-      set_bkg_tile_xy(ix, iy, iconCords[(iy * 20 + ix)]);
+      switch (IDCords[(iy * 20 + ix)])
+      {
+
+      case 0:
+        set_bkg_tile_xy(ix, iy, 0);
+        break;
+
+      case 1:
+        set_bkg_tile_xy(ix, iy, 77);
+        break;
+
+      case 2:
+        set_bkg_tile_xy(ix, iy, 102);
+        break;
+
+      case 3:
+        set_bkg_tile_xy(ix, iy, 75);
+        break;
+
+      case 4:
+        set_bkg_tile_xy(ix, iy, 76);
+        break;  
+
+      case 5:
+        set_bkg_tile_xy(ix, iy, 78);
+        break;
+
+      default:
+      set_bkg_tile_xy(ix, iy, 38);
+        break;
+      }
+      
     }
   }
-  
+ 
 }
 
 void main(void)
@@ -97,7 +141,11 @@ void main(void)
   DISPLAY_ON;
   ENABLE_RAM_MBC5;
   SWITCH_RAM(SYSTEMVARS);
+
+
   set_bkg_data(0, 103, graphics);
+
+  
 
   set_bkg_tile_xy(4, 8, 13);
   set_bkg_tile_xy(5, 8, 18);
@@ -118,12 +166,31 @@ void main(void)
 
     set_bkg_tile_xy(i, 9, 0); // clearing nintendo logo
   }
-  SWITCH_RAM(SYSTEMVARS);
-  if (ChkDsk != 69)
+
+POST:
+  if (IDCords[1*20+1] != 2)
   {
-    SWITCH_RAM(SYSTEMVARS);
+
     firstBoot();
-    ChkDsk = 69;
+    if (IDCords[1*20+1] != 2)
+    {
+      set_bkg_tile_xy(4, 9, 28);
+      set_bkg_tile_xy(5, 9, 15);
+      set_bkg_tile_xy(6, 9, 30);
+      set_bkg_tile_xy(7, 9, 28);
+      set_bkg_tile_xy(8, 9, 35);
+      set_bkg_tile_xy(9, 9, 19);
+      set_bkg_tile_xy(10, 9, 24);
+      set_bkg_tile_xy(11, 9, 17);
+      
+      goto POST;
+    }
+  }
+
+  for (uint8_t i = 4; i < 17; i++)
+  {
+    set_bkg_tile_xy(i, 8, 0); // clearing nintendo logo
+    set_bkg_tile_xy(i, 9, 0); // clearing nintendo logo
   }
 
   SWITCH_RAM(SYSTEMVARS);
@@ -132,7 +199,7 @@ void main(void)
   set_sprite_data(0, 4, cursorgraphics);
   set_sprite_tile(0, 1);
   move_sprite(0, 88, 72);
-  curx = 11;
+  curx = 10;
   cury = 9;
   SHOW_SPRITES;
   while (1)
@@ -140,7 +207,8 @@ void main(void)
     uint8_t cur = joypad();
     if (cur & J_A)
     {
-      if (iconCords[(cury * 20 + curx)] != 0)
+      SWITCH_RAM(SYSTEMVARS);
+      if (IDCords[(cury * 20 + curx)] != 0)
       {
         set_sprite_tile(0, 3);
       }
