@@ -56,6 +56,44 @@ void CPRamDisk2Bank(uint8_t bank)
 
 }
 
+void genIconsfromIDs()
+{
+  for(uint16_t i = 0; i < 360; i++)
+  {
+     switch (IDCords[i])
+      {
+
+      case 0:
+        IconCords[i]=0;
+        break;
+
+      case 1:
+        IconCords[i]=77;
+        break;
+
+      case 2:
+        IconCords[i]=102;
+        break;
+
+      case 3:
+        IconCords[i]=75;
+        break;
+
+      case 4:
+        IconCords[i]=76;
+        break;  
+
+      case 5:
+        IconCords[i]=78;
+        break;
+
+      default:
+      IconCords[i]=38;
+        break;
+      }
+  }
+}
+
 void firstBoot()
 {
   SWITCH_RAM(SYSTEMVARS);
@@ -94,42 +132,13 @@ void initDesktop()
   set_bkg_tile_xy(1, 5, 75);  // paint
   set_bkg_tile_xy(1, 7, 76);  // notepad
   set_bkg_tile_xy(1, 9, 78);  // transfer */
+  genIconsfromIDs();
 for (uint8_t iy=0; iy < 18; iy++)
   { 
     for(uint8_t ix=0; ix < 20; ix++)
     {
-      switch (IDCords[(iy * 20 + ix)])
-      {
-
-      case 0:
-        set_bkg_tile_xy(ix, iy, 0);
-        break;
-
-      case 1:
-        set_bkg_tile_xy(ix, iy, 77);
-        break;
-
-      case 2:
-        set_bkg_tile_xy(ix, iy, 102);
-        break;
-
-      case 3:
-        set_bkg_tile_xy(ix, iy, 75);
-        break;
-
-      case 4:
-        set_bkg_tile_xy(ix, iy, 76);
-        break;  
-
-      case 5:
-        set_bkg_tile_xy(ix, iy, 78);
-        break;
-
-      default:
-      set_bkg_tile_xy(ix, iy, 38);
-        break;
-      }
-      
+     
+      set_bkg_tile_xy(ix, iy, IconCords[(iy * 20 + ix)]);
     }
   }
  
