@@ -755,7 +755,7 @@ void controls(uint8_t cur)
           break;
 
         case I:
-          asciiNum = 20;
+          asciiNum = 19;
           RAMDISK[cury * 20 + curx] = asciiNum;
           if (curx < 20)
           {
