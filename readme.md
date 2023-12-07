@@ -1,8 +1,9 @@
-# GBOS
+# GBDK - GBOS
 
 An open source Operating System for the Nintendo Gameboy! built with GBDK!
 
-
+This project has been discontinued, but you are free to continue it!
+I am moving this project over to ASM, and thus, I am making a new repo for it.
 
 
 ## Console Support
